@@ -1,0 +1,1250 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "REST API Design and Documentation Kit",
+    "description": "Educational REST API demonstration kit for third-year CSE students. Demonstrates clean REST architecture, OpenAPI documentation, automated testing, and responsible AI-assisted engineering.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Service Health Check",
+        "description": "Returns service availability, application version, current UTC timestamp, and database connectivity status.",
+        "operationId": "get_health_health_get",
+        "responses": {
+          "200": {
+            "description": "Service is operational and database connection is verified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/books": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "List Books",
+        "description": "Retrieve a paginated collection of books. Supports optional case-insensitive substring search on title and author.",
+        "operationId": "list_books_api_v1_books_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Maximum number of books to return (1-100).",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Maximum number of books to return (1-100)."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Offset index for pagination.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset index for pagination."
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by title or author.",
+              "title": "Search"
+            },
+            "description": "Filter by title or author."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of books.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedBooks"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Create New Book",
+        "description": "Add a new book to the library inventory. ISBN must be unique across all records.",
+        "operationId": "create_book_api_v1_books_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Book successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRead"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: A book with this ISBN already exists.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on request body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/books/{book_id}": {
+      "get": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Get Book by ID",
+        "description": "Retrieve a single book resource by its unique primary key identifier.",
+        "operationId": "get_book_api_v1_books__book_id__get",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Unique integer ID of the book.",
+              "title": "Book Id"
+            },
+            "description": "Unique integer ID of the book."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested book was found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Book not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on book_id path parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Replace Book (Complete Update)",
+        "description": "Completely replace an existing book's metadata. All attributes must be provided.",
+        "operationId": "replace_book_api_v1_books__book_id__put",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Unique integer ID of the book.",
+              "title": "Book Id"
+            },
+            "description": "Unique integer ID of the book."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Book successfully replaced.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Total copies cannot be lower than currently borrowed count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Book not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: Updated ISBN conflicts with another book.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on request body or parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Partially Update Book",
+        "description": "Update one or more fields of an existing book. Omitted fields remain unchanged.",
+        "operationId": "patch_book_api_v1_books__book_id__patch",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Unique integer ID of the book.",
+              "title": "Book Id"
+            },
+            "description": "Unique integer ID of the book."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Book successfully updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Updated total copies is less than active borrowings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Book not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: Updated ISBN conflicts with another book.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on request body or parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Books"
+        ],
+        "summary": "Delete Book",
+        "description": "Permanently delete a book from the library. Deletion is rejected with 409 Conflict if active borrowings exist for this book.",
+        "operationId": "delete_book_api_v1_books__book_id__delete",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Unique integer ID of the book.",
+              "title": "Book Id"
+            },
+            "description": "Unique integer ID of the book."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Book successfully deleted. No response body returned."
+          },
+          "404": {
+            "description": "Book not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: Active borrowings exist for this book.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on book_id path parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/books/{book_id}/borrow": {
+      "post": {
+        "tags": [
+          "Borrowing"
+        ],
+        "summary": "Borrow Book",
+        "description": "Borrow a single copy of a book. Atomically checks availability and decrements available inventory. Returns 409 Conflict if no copies are available.",
+        "operationId": "borrow_book_api_v1_books__book_id__borrow_post",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Unique integer ID of the book to borrow.",
+              "title": "Book Id"
+            },
+            "description": "Unique integer ID of the book to borrow."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/BorrowRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Borrowing transaction created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BorrowingRead"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Book not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: No copies of this book are currently available.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on parameters or payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/books/{book_id}/return": {
+      "post": {
+        "tags": [
+          "Borrowing"
+        ],
+        "summary": "Return Borrowed Book",
+        "description": "Return a borrowed copy of a book. Restores available inventory and updates the borrowing record. Allows supplying a specific borrowing_id or defaults to the most recent active borrowing.",
+        "operationId": "return_book_api_v1_books__book_id__return_post",
+        "parameters": [
+          {
+            "name": "book_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Unique integer ID of the book being returned.",
+              "title": "Book Id"
+            },
+            "description": "Unique integer ID of the book being returned."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReturnRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Book returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BorrowingRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request: Invalid return attempt or inventory overflow.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found: Book or active borrowing record not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on parameters or payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/borrowings": {
+      "get": {
+        "tags": [
+          "Borrowing"
+        ],
+        "summary": "List Borrowing Records",
+        "description": "Retrieve historical borrowing audit logs with pagination and optional filtering by status or book ID.",
+        "operationId": "list_borrowings_api_v1_borrowings_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Maximum number of records to return (1-100).",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Maximum number of records to return (1-100)."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Offset index for pagination.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Offset index for pagination."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(BORROWED|RETURNED)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status: BORROWED or RETURNED.",
+              "title": "Status"
+            },
+            "description": "Filter by status: BORROWED or RETURNED."
+          },
+          {
+            "name": "book_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by specific book ID.",
+              "title": "Book Id"
+            },
+            "description": "Filter by specific book ID."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of borrowing records.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedBorrowings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on query parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Root Welcome & Navigation Index",
+        "description": "Provides quick navigation links to interactive documentation and endpoints.",
+        "operationId": "root_index__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BookCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Title of the book",
+            "examples": [
+              "Designing Data-Intensive Applications"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Author",
+            "description": "Primary author or contributors",
+            "examples": [
+              "Martin Kleppmann"
+            ]
+          },
+          "isbn": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Isbn",
+            "description": "International Standard Book Number (ISBN-10 or ISBN-13)",
+            "examples": [
+              "978-1449373320"
+            ]
+          },
+          "publication_year": {
+            "type": "integer",
+            "title": "Publication Year",
+            "description": "Calendar year of publication (between 1000 and current year)",
+            "examples": [
+              2017
+            ]
+          },
+          "total_copies": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Total Copies",
+            "description": "Total inventory count for this book (minimum 1)",
+            "default": 1,
+            "examples": [
+              5
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "author",
+          "isbn",
+          "publication_year"
+        ],
+        "title": "BookCreate"
+      },
+      "BookPatch": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "author": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "isbn": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "minLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isbn"
+          },
+          "publication_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Year"
+          },
+          "total_copies": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Copies"
+          }
+        },
+        "type": "object",
+        "title": "BookPatch",
+        "description": "Schema for partial resource update (PATCH). All fields optional."
+      },
+      "BookRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "isbn": {
+            "type": "string",
+            "title": "Isbn"
+          },
+          "publication_year": {
+            "type": "integer",
+            "title": "Publication Year"
+          },
+          "total_copies": {
+            "type": "integer",
+            "title": "Total Copies"
+          },
+          "available_copies": {
+            "type": "integer",
+            "title": "Available Copies"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "author",
+          "isbn",
+          "publication_year",
+          "total_copies",
+          "available_copies",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BookRead"
+      },
+      "BookUpdate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Title of the book",
+            "examples": [
+              "Designing Data-Intensive Applications"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Author",
+            "description": "Primary author or contributors",
+            "examples": [
+              "Martin Kleppmann"
+            ]
+          },
+          "isbn": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 10,
+            "title": "Isbn",
+            "description": "International Standard Book Number (ISBN-10 or ISBN-13)",
+            "examples": [
+              "978-1449373320"
+            ]
+          },
+          "publication_year": {
+            "type": "integer",
+            "title": "Publication Year",
+            "description": "Calendar year of publication (between 1000 and current year)",
+            "examples": [
+              2017
+            ]
+          },
+          "total_copies": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Total Copies",
+            "description": "Total inventory count for this book (minimum 1)",
+            "default": 1,
+            "examples": [
+              5
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "author",
+          "isbn",
+          "publication_year"
+        ],
+        "title": "BookUpdate",
+        "description": "Schema for complete resource replacement (PUT)."
+      },
+      "BorrowRequest": {
+        "properties": {
+          "borrower_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Borrower Name",
+            "description": "Name or student ID of the borrower. Defaults to demo student if omitted.",
+            "examples": [
+              "Alex Johnson (Student ID: CS-301)"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "BorrowRequest"
+      },
+      "BorrowingRead": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "book_id": {
+            "type": "integer",
+            "title": "Book Id"
+          },
+          "borrower_name": {
+            "type": "string",
+            "title": "Borrower Name"
+          },
+          "borrowed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Borrowed At"
+          },
+          "returned_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returned At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "book_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Book Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "book_id",
+          "borrower_name",
+          "borrowed_at",
+          "status"
+        ],
+        "title": "BorrowingRead"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Machine-readable uppercase error code (e.g. BOOK_NOT_FOUND)"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable explanation of what went wrong"
+          },
+          "details": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details",
+            "description": "Optional detailed validation errors or diagnostic context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody"
+      },
+      "ErrorEnvelope": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorEnvelope",
+        "example": {
+          "error": {
+            "code": "BOOK_NOT_FOUND",
+            "message": "The requested book was not found."
+          }
+        }
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "healthy",
+            "examples": [
+              "healthy"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "examples": [
+              "1.0.0"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "database": {
+            "type": "string",
+            "title": "Database",
+            "examples": [
+              "connected"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "version",
+          "timestamp",
+          "database"
+        ],
+        "title": "HealthResponse"
+      },
+      "PaginatedBooks": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BookRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total matching books in inventory"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Pagination page size"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Pagination offset from start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "PaginatedBooks"
+      },
+      "PaginatedBorrowings": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BorrowingRead"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total matching borrowing transactions"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "Pagination limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "description": "Pagination offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "PaginatedBorrowings"
+      },
+      "ReturnRequest": {
+        "properties": {
+          "borrowing_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Borrowing Id",
+            "description": "Optional specific borrowing ID. If omitted, the latest active record for this book is returned.",
+            "examples": [
+              1
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ReturnRequest"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "System health, versioning, and database reachability probes."
+    },
+    {
+      "name": "Books",
+      "description": "Inventory management: list, retrieve, create, replace, patch, and delete books."
+    },
+    {
+      "name": "Borrowing",
+      "description": "Library lending workflow: borrow book copies, return copies, and inspect audit logs."
+    }
+  ]
+}
